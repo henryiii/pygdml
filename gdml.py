@@ -1,5 +1,9 @@
 #!\usr\bin\env python3
 
+__all__ = ['Define','Materials','Solids','Structure','Setup','makefile','GDML']
+
+MY_NAMESPACES = {'xsi':'http://www.w3.org/2001/XMLSchema-instance'}
+SCHEMA_LOC = 'http://service-spi.web.cern.ch/service-spi/app/releases/GDML/GDML_3_0_0/schema/gdml.xsd'
 
 try:
     from lxml import etree
@@ -8,7 +12,7 @@ except ImportError:
     import xml.etree.ElementTree as etree
     xfeatures = False
 
-class GDML(object):
+class GDMLbase(object):
     def getElements(self):
         return self._core
 
@@ -32,23 +36,29 @@ class GDML(object):
         return el
 
 
-class GDMLdefine(GDML):
+class Define(GDMLbase):
     def __init__(self):
         self._core = etree.Element('define')
+
+    def setDefault(self):
+        self.addPosition('center')
+        self.addRotation('identity')
+        self.addScale('unity')
+        return self
 
     def addConstant(self, name, value):
         return self.addGeneric('constant',**locals())
 
-    def addQuantity(self, name, type, value, unit):
+    def addQuantity(self, name, value, type, unit):
         return self.addGeneric('quanity',**locals())
 
     def addVariable(self, name, value):
         return self.addGeneric('variable',**locals())
 
-    def addPosition(self, name, x, y, z, unit='m'):
+    def addPosition(self, name, x=0, y=0, z=0, unit='m'):
         return self.addGeneric('position',**locals())
 
-    def addRotation(self,x=0,y=0,z=0,unit='deg'):
+    def addRotation(self, name, x=0, y=0, z=0, unit='deg'):
         el = etree.SubElement(self._core, 'rotation')
         el.set('name',name)
         if x:
@@ -67,7 +77,12 @@ class GDMLdefine(GDML):
         'Values should be space seperated.'
         return self.addGeneric('matrix',**locals())
 
-class GDMLmaterials(GDML):
+    def addVerts(self, name, verts, unit='m'):
+        for i,vert in enumerate(verts):
+            self.addPosition(name + '_v' + str(i), vert[0], vert[1], vert[2], unit)
+
+class Materials(GDMLbase):
+    'Note that G4_... NIST materials work!'
     def __init__(self):
         self._core = etree.Element('materials')
 
@@ -137,7 +152,7 @@ class GDMLmaterials(GDML):
         return el
 
 
-class GDMLsolids(GDML):
+class Solids(GDMLbase):
     def __init__(self):
         self._core = etree.Element('solids')
 
@@ -155,21 +170,103 @@ class GDMLsolids(GDML):
         deltaphi angle of the segment'''
         return self.addGeneric('cone',**locals())
 
+    def addTrapeziod(self, name, x1, x2, y1, y2, z, lunit='m'):
+        return self.addGeneric('trd',**locals())
 
-class GDMLstructure(GDML):
+    def addTube(self, name, rmin, rmax, z, startphi=0, deltaphi=360, aunit='deg', lunit='m'):
+        return self.addGeneric('tube',**locals())
+
+    def addTessallated(self, name, listoffaces, type='ABSOLUTE'):
+        el = etree.SubElement(self._core, 'tessellated')
+        el.set('name', name)
+        for face in listoffaces:
+            fc = etree.SubElement(el, 'triangular' if len(face) == 3 else 'quadrangular')
+            for i,vert in enumerate(face):
+                fc.set('vertex{0}'.format(i+1), str(vert))
+            fc.set('type', type)
+
+
+class Structure(GDMLbase):
     def __init__(self):
         self._core = etree.Element('structure')
 
+    def addWorld(self, name='World', material='G4_AIR', solid_name='world'):
+        'Must be a predefinied box!'
+        el = etree.SubElement(self._core, 'volume')
+        el.set('name', name)
+        mat = etree.SubElement(el, 'materialref')
+        mat.set('ref', material)
+        sol = etree.SubElement(el, 'solidref')
+        sol.set('ref', solid_name)
+        self._world = el
 
-class GDMLsetup(GDML):
-    def __init__(self):
+
+    def addVolume(self, name, material, solid_name=None,
+                  volume_position='center',
+                  volume_rotation='identity', volume_scale='unity'):
+
+        if solid_name is None:
+            solid_name = name
+
+        el = etree.SubElement(self._core, 'volume')
+        el.set('name',name)
+        mat = etree.SubElement(el, 'materialref')
+        mat.set('ref', material)
+        sol = etree.SubElement(el, 'solidref')
+        sol.set('ref', solid_name)
+
+        nel = etree.SubElement(self._world, 'physvol')
+        volname = etree.SubElement(nel, 'volumeref')
+        volname.set('ref', name)
+        volpos = etree.SubElement(nel, 'positionref')
+        volpos.set('ref', volume_position)
+        volrot = etree.SubElement(nel, 'rotationref')
+        volrot.set('ref', volume_rotation)
+        volscale = etree.SubElement(nel, 'scaleref')
+        volscale.set('ref', volume_scale)
+
+
+
+class Setup(GDMLbase):
+    def __init__(self, name='Default', world='World', version='1.0'):
         self._core = etree.Element('setup')
+        self._core.set('name', name)
+        self._core.set('version', str(version))
+        el = etree.SubElement(self._core, 'world')
+        el.set('ref',world)
+
+
+class GDML(GDMLbase):
+    def __init__(self, name='Default'):
+
+        self._core = etree.Element('gdml',nsmap=MY_NAMESPACES)
+        self._core.set('{%s}noNamespaceSchemaLocation' % MY_NAMESPACES['xsi'], SCHEMA_LOC)
+
+        self.define = Define()
+        self.materials = Materials()
+        self.solids = Solids()
+        self.structure = Structure()
+        self.setup = Setup(name)
+
+        self._core.append(self.define._core)
+        self._core.append(self.materials._core)
+        self._core.append(self.solids._core)
+        self._core.append(self.structure._core)
+        self._core.append(self.setup._core)
+
+        self.define.setDefault()
+
+    def tofile(self, filename):
+        if xfeatures:
+            etree.ElementTree(self._core).write(filename, xml_declaration=True, encoding='utf-8', pretty_print=True)
+        else:
+            etree.ElementTree(self._core).write(filename, xml_declaration=True, encoding='utf-8')
 
 
 def makefile(filename, *parsers):
     MY_NAMESPACES={'xsi':'http://www.w3.org/2001/XMLSchema-instance'}
     root = etree.Element('gdml',nsmap=MY_NAMESPACES)
-    root.set('{%s}noNamespaceSchemaLocation' % MY_NAMESPACES['xsi'], 'http://service-spi.web.cern.ch/service-spi/app/releases/GDML/GDML_3_0_0/schema/gdml.xsd')
+    root.set('{%s}noNamespaceSchemaLocation' % MY_NAMESPACES['xsi'], SCHEMA_LOC)
     for parser in parsers:
         root.append(parser._core)
     if xfeatures:
