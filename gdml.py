@@ -1,8 +1,8 @@
-#!\usr\bin\env python3
+#!/usr/bin/env python3
 
 import math
 
-__all__ = ['Define','Materials','Solids','Structure','Setup','makefile','GDML']
+__all__ = ['Define','Materials','Solids','Structure','Setup','GDML']
 
 MY_NAMESPACES = {'xsi':'http://www.w3.org/2001/XMLSchema-instance'}
 SCHEMA_LOC = 'http://service-spi.web.cern.ch/service-spi/app/releases/GDML/GDML_3_0_0/schema/gdml.xsd'
@@ -27,9 +27,10 @@ class GDMLbase(object):
         else:
             return etree.tostring(self._core,encoding='utf-8').decode("utf-8")
 
-
     def addGeneric(local_self, local_type, name, **kargs):
         el = etree.SubElement(local_self._core, local_type)
+        if isinstance(name,etree._Element):
+            name = name.get('name')
         el.set('name',name)
         if 'self' in kargs:
             del kargs['self']
@@ -185,6 +186,8 @@ class Solids(GDMLbase):
         return self.addGeneric('tube',**locals())
 
     def addTessallated(self, name, listoffaces, type='ABSOLUTE'):
+        if isinstance(name,etree._Element):
+            name = name.get('name')
         el = etree.SubElement(self._core, 'tessellated')
         el.set('name', name)
         for face in listoffaces:
@@ -212,17 +215,17 @@ class Structure(GDMLbase):
     def addVolume(self, name, material,
                   volume_position='center',
                   volume_rotation='identity', volume_scale='unity',
-                  volume_parent=None,
+                  parent=None,
                   solid_name=None,
                   aux=None):
 
         if solid_name is None:
             solid_name = name
 
-        if volume_parent is None:
-            volume_parent = self._world
-        elif isinstance(volume_parent,str):
-            raise NotImplemented('String parent will be added in future version')
+        if parent is None:
+            parent = self._world
+        elif isinstance(parent,str):
+            parent = find_element_with_name(self._world,parent)
 
         el = etree.SubElement(self._core, 'volume')
         el.set('name',name)
@@ -231,7 +234,7 @@ class Structure(GDMLbase):
         sol = etree.SubElement(el, 'solidref')
         sol.set('ref', solid_name)
 
-        nel = etree.SubElement(volume_parent, 'physvol')
+        nel = etree.SubElement(parent, 'physvol')
         volname = etree.SubElement(nel, 'volumeref')
         volname.set('ref', name)
         volpos = etree.SubElement(nel, 'positionref')
@@ -259,6 +262,8 @@ class Setup(GDMLbase):
 class GDML(GDMLbase):
     def __init__(self, name='Default'):
 
+        self._main_name = name
+
         self._core = etree.Element('gdml',nsmap=MY_NAMESPACES)
         self._core.set('{%s}noNamespaceSchemaLocation' % MY_NAMESPACES['xsi'], SCHEMA_LOC)
 
@@ -276,20 +281,23 @@ class GDML(GDMLbase):
 
         self.define.setDefault()
 
-    def tofile(self, filename):
+    def tofile(self, filename=None):
+        if filename is None:
+            filename = self._main_name + '.gdml'
         if xfeatures:
             etree.ElementTree(self._core).write(filename, xml_declaration=True, encoding='utf-8', pretty_print=True)
         else:
             etree.ElementTree(self._core).write(filename, xml_declaration=True, encoding='utf-8')
 
 
-def makefile(filename, *parsers):
-    MY_NAMESPACES={'xsi':'http://www.w3.org/2001/XMLSchema-instance'}
-    root = etree.Element('gdml',nsmap=MY_NAMESPACES)
-    root.set('{%s}noNamespaceSchemaLocation' % MY_NAMESPACES['xsi'], SCHEMA_LOC)
-    for parser in parsers:
-        root.append(parser._core)
-    if xfeatures:
-        etree.ElementTree(root).write(filename, xml_declaration=True, encoding='utf-8', pretty_print=True)
-    else:
-        etree.ElementTree(root).write(filename, xml_declaration=True, encoding='utf-8')
+def find_element_with_name(tree, name):
+    for element in tree:
+        if len(element) == 0:
+            if element.get('name') == name:
+                return element
+        else:
+            return find_element_with_name(element, name)
+
+
+
+

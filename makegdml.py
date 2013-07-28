@@ -1,8 +1,8 @@
-#!\usr\bin\env python3
+#!/usr/bin/env python3
 
 from gdml import GDML
 
-mygdml = GDML('MakeGDML')
+mygdml = GDML('Bricks_Position_6')
 
 mygdml.define.addQuantity('det_length', 1.3720, 'length', 'm')
 mygdml.define.addPosition('det_location', -8, -38.5, -10)
@@ -35,6 +35,6 @@ mygdml.structure.addVolume('Strips','G4_PLASTIC_SC_VINYLTOLUENE','det_position',
 mygdml.solids.addTube('Core', 0.220, .220-.006, 'det_length')
 mygdml.structure.addVolume('Core','G4_Al','det_position','det_rotation')
 
-mygdml.tofile('makegdmltest.gdml')
+mygdml.tofile()
 
 
