@@ -1,5 +1,7 @@
 #!\usr\bin\env python3
 
+import math
+
 __all__ = ['Define','Materials','Solids','Structure','Setup','makefile','GDML']
 
 MY_NAMESPACES = {'xsi':'http://www.w3.org/2001/XMLSchema-instance'}
@@ -26,8 +28,8 @@ class GDMLbase(object):
             return etree.tostring(self._core,encoding='utf-8').decode("utf-8")
 
 
-    def addGeneric(local_self, type, name, **kargs):
-        el = etree.SubElement(local_self._core, type)
+    def addGeneric(local_self, local_type, name, **kargs):
+        el = etree.SubElement(local_self._core, local_type)
         el.set('name',name)
         if 'self' in kargs:
             del kargs['self']
@@ -69,6 +71,12 @@ class Define(GDMLbase):
             el.set('z',str(z))
         el.set('unit',unit)
         return el
+
+    def addRotationMatrix(self,name,x0,y0,z0,x1,y1,z1,x2,y2,z2):
+        x=math.degrees(math.atan2(z1,z2))
+        y=math.degrees(math.atan2(-z0,math.sqrt(z1**2+z2**2)))
+        z=math.degrees(math.atan2(y0,x0))
+        return self.addRotation(name,x,y,z,'deg')
 
     def addScale(self, name, x=1, y=1, z=1):
         return self.addGeneric('scale',**locals())
@@ -201,12 +209,20 @@ class Structure(GDMLbase):
         self._world = el
 
 
-    def addVolume(self, name, material, solid_name=None,
+    def addVolume(self, name, material,
                   volume_position='center',
-                  volume_rotation='identity', volume_scale='unity'):
+                  volume_rotation='identity', volume_scale='unity',
+                  volume_parent=None,
+                  solid_name=None,
+                  aux=None):
 
         if solid_name is None:
             solid_name = name
+
+        if volume_parent is None:
+            volume_parent = self._world
+        elif isinstance(volume_parent,str):
+            raise NotImplemented('String parent will be added in future version')
 
         el = etree.SubElement(self._core, 'volume')
         el.set('name',name)
@@ -215,7 +231,7 @@ class Structure(GDMLbase):
         sol = etree.SubElement(el, 'solidref')
         sol.set('ref', solid_name)
 
-        nel = etree.SubElement(self._world, 'physvol')
+        nel = etree.SubElement(volume_parent, 'physvol')
         volname = etree.SubElement(nel, 'volumeref')
         volname.set('ref', name)
         volpos = etree.SubElement(nel, 'positionref')
@@ -224,6 +240,10 @@ class Structure(GDMLbase):
         volrot.set('ref', volume_rotation)
         volscale = etree.SubElement(nel, 'scaleref')
         volscale.set('ref', volume_scale)
+        if aux:
+            naux = etree.SubElement(nel, 'auxiliary')
+            naux.set('auxtype',aux[0])
+            naux.set('auxval',aux[1])
 
 
 
