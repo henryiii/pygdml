@@ -191,8 +191,8 @@ class Solids(GDMLbase):
         el.set('name', name)
         for face in listoffaces:
             fc = etree.SubElement(el, 'triangular' if len(face) == 3 else 'quadrangular')
-            for i,vert in enumerate(face):
-                fc.set('vertex{0}'.format(i+1), str(vert))
+            for i,vert in enumerate(reversed(face)):
+                fc.set('vertex{0}'.format(i+1), name + '_v' + str(vert))
             fc.set('type', type)
 
 
