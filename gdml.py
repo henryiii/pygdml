@@ -29,8 +29,7 @@ class GDMLbase(object):
 
     def addGeneric(local_self, local_type, name, **kargs):
         el = etree.SubElement(local_self._core, local_type)
-        if isinstance(name,etree._Element):
-            name = name.get('name')
+        name = validify_name(name)
         el.set('name',name)
         if 'self' in kargs:
             del kargs['self']
@@ -53,7 +52,7 @@ class Define(GDMLbase):
         return self.addGeneric('constant',**locals())
 
     def addQuantity(self, name, value, type, unit):
-        return self.addGeneric('quanity',**locals())
+        return self.addGeneric('quantity',**locals())
 
     def addVariable(self, name, value):
         return self.addGeneric('variable',**locals())
@@ -214,13 +213,17 @@ class Structure(GDMLbase):
 
     def addVolume(self, name, material,
                   volume_position='center',
-                  volume_rotation='identity', volume_scale='unity',
+                  volume_rotation='identity', volume_scale=None,
                   parent=None,
-                  solid_name=None,
+                  phys_name=None,
                   aux=None):
 
-        if solid_name is None:
-            solid_name = name
+        name = validify_name(name)
+
+        if phys_name is None:
+            phys_name = name + '_phys'
+        else:
+            phys_name = validify_name(phys_name)
 
         if parent is None:
             parent = self._world
@@ -228,21 +231,48 @@ class Structure(GDMLbase):
             parent = find_element_with_name(self._world,parent)
 
         el = etree.SubElement(self._core, 'volume')
-        el.set('name',name)
+        el.set('name',phys_name)
         mat = etree.SubElement(el, 'materialref')
         mat.set('ref', material)
         sol = etree.SubElement(el, 'solidref')
-        sol.set('ref', solid_name)
+        sol.set('ref', name)
 
         nel = etree.SubElement(parent, 'physvol')
         volname = etree.SubElement(nel, 'volumeref')
-        volname.set('ref', name)
+        volname.set('ref', phys_name)
         volpos = etree.SubElement(nel, 'positionref')
         volpos.set('ref', volume_position)
         volrot = etree.SubElement(nel, 'rotationref')
         volrot.set('ref', volume_rotation)
-        volscale = etree.SubElement(nel, 'scaleref')
-        volscale.set('ref', volume_scale)
+        if volume_scale:
+            volscale = etree.SubElement(nel, 'scaleref')
+            volscale.set('ref', volume_scale)
+        if aux:
+            naux = etree.SubElement(nel, 'auxiliary')
+            naux.set('auxtype',aux[0])
+            naux.set('auxval',aux[1])
+
+    def addVolumeFile(self, filename,
+                  volume_position='center',
+                  volume_rotation='identity', volume_scale=None,
+                  parent=None,
+                  aux=None):
+
+        if parent is None:
+            parent = self._world
+        elif isinstance(parent,str):
+            parent = find_element_with_name(self._world,parent)
+
+        nel = etree.SubElement(parent, 'physvol')
+        volname = etree.SubElement(nel, 'file')
+        volname.set('name', filename)
+        volpos = etree.SubElement(nel, 'positionref')
+        volpos.set('ref', volume_position)
+        volrot = etree.SubElement(nel, 'rotationref')
+        volrot.set('ref', volume_rotation)
+        if volscale:
+            volscale = etree.SubElement(nel, 'scaleref')
+            volscale.set('ref', volume_scale)
         if aux:
             naux = etree.SubElement(nel, 'auxiliary')
             naux.set('auxtype',aux[0])
@@ -298,6 +328,11 @@ def find_element_with_name(tree, name):
         else:
             return find_element_with_name(element, name)
 
+def validify_name(name):
+    if isinstance(name, etree._Element):
+        return name.get('name')
+    else:
+        return name
 
 
 
