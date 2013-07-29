@@ -270,7 +270,7 @@ class Structure(GDMLbase):
         volpos.set('ref', volume_position)
         volrot = etree.SubElement(nel, 'rotationref')
         volrot.set('ref', volume_rotation)
-        if volscale:
+        if volume_scale:
             volscale = etree.SubElement(nel, 'scaleref')
             volscale.set('ref', volume_scale)
         if aux:
