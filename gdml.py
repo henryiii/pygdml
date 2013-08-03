@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import math
+from functools import partial
 
 __all__ = ['Define','Materials','Solids','Structure','Setup','GDML']
 
@@ -215,23 +216,24 @@ class Structure(GDMLbase):
                   volume_position='center',
                   volume_rotation='identity', volume_scale=None,
                   parent=None,
-                  phys_name=None,
+                  logical_name=None,
                   aux=None):
 
         name = validify_name(name)
 
-        if phys_name is None:
-            phys_name = name + '_phys'
+        if logical_name is None:
+            logical_name = name
         else:
-            phys_name = validify_name(phys_name)
+            logical_name = validify_name(logical_name)
 
         if parent is None:
             parent = self._world
         elif isinstance(parent,str):
             parent = find_element_with_name(self._world,parent)
 
-        el = etree.SubElement(self._core, 'volume')
-        el.set('name',phys_name)
+        el = etree.Element('volume')
+        self._core.insert(0,el)
+        el.set('name',logical_name)
         mat = etree.SubElement(el, 'materialref')
         mat.set('ref', material)
         sol = etree.SubElement(el, 'solidref')
@@ -239,7 +241,7 @@ class Structure(GDMLbase):
 
         nel = etree.SubElement(parent, 'physvol')
         volname = etree.SubElement(nel, 'volumeref')
-        volname.set('ref', phys_name)
+        volname.set('ref', logical_name)
         volpos = etree.SubElement(nel, 'positionref')
         volpos.set('ref', volume_position)
         volrot = etree.SubElement(nel, 'rotationref')
@@ -311,6 +313,11 @@ class GDML(GDMLbase):
 
         self.define.setDefault()
 
+    def validate_detector(self):
+        required = ('det_rotation', 'det_location',
+                    'Shell', 'Strips', 'Core')
+        return all(map(partial(check_if_contains,self._core), required))
+
     def tofile(self, filename=None):
         if filename is None:
             filename = self._main_name + '.gdml'
@@ -322,11 +329,19 @@ class GDML(GDMLbase):
 
 def find_element_with_name(tree, name):
     for element in tree:
-        if len(element) == 0:
-            if element.get('name') == name:
-                return element
-        else:
-            return find_element_with_name(element, name)
+        if element.get('name') == name:
+            return element
+        if len(element) > 0:
+            sub = find_element_with_name(element, name)
+            if sub is not None:
+                return sub
+
+def check_if_contains(tree, name):
+    if find_element_with_name(tree, name) is None:
+        print(name, 'is missing!')
+        return False
+    else:
+        return True
 
 def validify_name(name):
     if isinstance(name, etree._Element):
