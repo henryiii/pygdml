@@ -6,7 +6,7 @@
 import sys
 sys.path.append('.')
 
-from gdml import GDML
+from pygdml.gdml import GDML
 import bpy
 
 mygdml = GDML(bpy.context.object.name)
@@ -44,7 +44,7 @@ for ob in bpy.context.selected_objects:
     # Fix for different object's local coords
     # lmatrix = ob.matrix_local
     # matrix.inverted() *
-    
+
     vertlocs = [wmatrix * vert.co for vert in me.vertices]
     mygdml.define.addVerts(name,vertlocs)
 
