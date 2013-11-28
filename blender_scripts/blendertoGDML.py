@@ -3,7 +3,7 @@
 # Outputs the active object only
 # Result is in a file nameofobject.gdml
 
-from gdml import GDML
+from . import gdml.GDML as gdml
 import bpy
 
 def export_gdml(filepath,name,standalone):

@@ -6,7 +6,7 @@
 bl_info = {
     "name": "Geant4 GDML format",
     "author": "Henry Schreiner",
-    "location": "File > Import-Export",
+    "location": "File > Export",
     "description": "GDML export for Blender. Supports meshes with auto-triangulation. Includes a C++ code generator.",
     "version":(0,1),
     "blender":(2,69,0),
@@ -28,7 +28,7 @@ from bpy.props import *
 from bpy_extras.io_utils import ExportHelper, ImportHelper
 
 class EXPORT_OT_geant_cpp(bpy.types.Operator, ExportHelper):
-    bl_idname = "io_export_scene.geant_gdml"
+    bl_idname = "io_export_scene.geant_cpp"
     bl_description = 'Export to Geant4 C++ file format (.cc)'
     bl_label = "Export Geant4 C++"
     bl_space_type = "PROPERTIES"
@@ -42,14 +42,21 @@ class EXPORT_OT_geant_cpp(bpy.types.Operator, ExportHelper):
         description="File path used for exporting the GDML file",
         maxlen= 1024, default= "")
 
-    #scale = bpy.props.FloatProperty(
-    #    name = "Scale",
-    #    description="Scale mesh",
-    #    default = 0.1, min = 0.001, max = 1000.0)
+    only_selected = bpy.props.BoolProperty(
+        name="Export Selected",
+        description="Export only selected meshes",
+        default=False)
+
+    global_coords = bpy.props.BoolProperty(
+        name="Global Coordinates",
+        description="Use global coordinates for points",
+        default=True)
 
     def execute(self, context):
-        print("Load", self.properties.filepath)
         from . import blendertoCPP
+        blendertoCPP.export_cpp(self.properties.filepath,
+                                self.properties.only_selected,
+                                self.properties.global_coords)
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -87,7 +94,6 @@ class EXPORT_OT_geant_gdml(bpy.types.Operator, ExportHelper):
     #    default = 0.1, min = 0.001, max = 1000.0)
 
     def execute(self, context):
-        print("Load", self.properties.filepath)
         from . import blendertoGDML
         print(self.properties.standalone)
         return {'FINISHED'}
