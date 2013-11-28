@@ -1,0 +1,23 @@
+{{ScriptInfo
+|name= Geant4 GDML format
+|tooltip= Tooltip
+|menu= File -> Export
+|usage= Allows export to .gdml and .cc formats.
+|version= 0.1
+|blender= 1.69
+|category= Import-Export
+|author= Henry Schreiner
+|license= GPL
+|distribution= Extern
+|note= 
+|exe= pygdml
+|download= 
+|modules= 
+|deps= 
+|data= 
+|bugtracker= 
+|warning= 
+|link= 
+|releaselog= 
+|issues= 
+}}

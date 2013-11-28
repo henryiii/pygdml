@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # Run from inside Blender
 # Outputs the active object only
-# Result is in seperate text block
 
 from textwrap import dedent
 import bpy
@@ -83,23 +82,23 @@ class G4TessellatedSolid:
     def __str__(self):
         return '\n'.join([self.str_init(), self.str_vertlist(), self.str_facelist(), self.str_finalize()])
 
+export_cpp(filepath):
 
+    ob = bpy.context.object
+    me = ob.data
+    solid = G4TessellatedSolid(ob.name)
+    wmatrix = ob.matrix_world
 
-ob = bpy.context.object
-me = ob.data
-solid = G4TessellatedSolid(ob.name)
-wmatrix = ob.matrix_world
+    me.calc_tessface()
 
-me.calc_tessface()
+    # Fix for different object's local coords
+    lmatrix = bpy.data.objects['Cube'].matrix_local
 
-# Fix for different object's local coords
-lmatrix = bpy.data.objects['Cube'].matrix_local
+    for vert in me.vertices:
+        solid.add_vert(lmatrix.inverted() * wmatrix * vert.co)
 
-for vert in me.vertices:
-    solid.add_vert(lmatrix.inverted() * wmatrix * vert.co)
+    for face in me.tessfaces:
+        solid.add_face(face.vertices)
 
-for face in me.tessfaces:
-    solid.add_face(face.vertices)
-
-out = bpy.data.texts.new('output.cpp')
-out.write(str(solid))
+    with open(filepath, 'w') as out:
+    out.write(str(solid))
