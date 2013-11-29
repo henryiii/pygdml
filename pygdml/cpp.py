@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from io import StringIO
+from . import gdml
 
 class G4TessellatedSolid:
     def __init__(self, name):
@@ -12,21 +13,8 @@ class G4TessellatedSolid:
     def add_face(self,face):
         'Triangulates face if not flat, follows geant ordering convention'
         face = list(reversed(face))
-        if len(face) != 4:
-            self._facelist.append(face)
-        else:
-            v1 = self._vertlist[face[1]] - self._vertlist[face[0]]
-            v2 = self._vertlist[face[2]] - self._vertlist[face[1]]
-            v3 = self._vertlist[face[3]] - self._vertlist[face[2]]
-            v12 = v1.cross(v2)
-            plane_factor = v12.dot(v3)
-            if plane_factor == 0:
-                self._facelist.append(face)
-            else:
-                face1 = [face[0], face[1], face[2]]
-                face2 = [face[0], face[2], face[3]]
-                self._facelist.append(face1)
-                self._facelist.append(face2)
+        for realface in gdml.breakup_quads_if_needed([face],self._vertlist):
+            self._facelist.append(realface)
 
     def add_vert(self,vert):
         self._vertlist.append(vert)

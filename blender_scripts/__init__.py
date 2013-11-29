@@ -69,7 +69,6 @@ class EXPORT_OT_geant_gdml(bpy.types.Operator, ExportHelper):
     bl_label = "Export Geant4 GDML"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
-    # From ExportHelper. Filter filenames.
     filename_ext = ".gdml"
     filter_glob = StringProperty(default="*.gdml", options={'HIDDEN'})
 
@@ -78,24 +77,33 @@ class EXPORT_OT_geant_gdml(bpy.types.Operator, ExportHelper):
         description="File path used for exporting the GDML file",
         maxlen= 1024, default= "")
 
-    name = bpy.props.StringProperty(
-        name="Name",
-        description="Name used for exporting the GDML file",
-        maxlen= 1024, default= "default")
+    only_selected = bpy.props.BoolProperty(
+        name="Export Selected",
+        description="Export only selected meshes",
+        default=False)
+
+    global_coords = bpy.props.BoolProperty(
+        name="Global Coordinates",
+        description="Use global coordinates for points",
+        default=True)
 
     standalone = bpy.props.BoolProperty(
         name = "Standalone file",
         description="Should the file include everything needed?",
         default = True)
 
-    #scale = bpy.props.FloatProperty(
-    #    name = "Scale",
-    #    description="Scale mesh",
-    #    default = 0.1, min = 0.001, max = 1000.0)
+    world = bpy.props.FloatVectorProperty(
+            name = 'World size',
+            description="Set the dimensions of the world box.",
+            default=(5,5,5))
 
     def execute(self, context):
-        from . import blendertoGDML
-        print(self.properties.standalone)
+        from .blendertoGDML import export_gdml
+        export_gdml(self.properties.filepath,
+                    self.properties.only_selected,
+                    self.properties.global_coords,
+                    self.properties.standalone,
+                    self.properties.world)
         return {'FINISHED'}
 
     def invoke(self, context, event):
