@@ -6,4 +6,4 @@ To install `pygdml`, run pip install . in the pygdml directory. Add a `-e` if yo
 
 To install the Blender add-on, open Blender and go to `File -> User Preferences...` and go to the add-ons tab. The install button is near the bottom. You can directly install the `.zip` or `.tar.gz` file without extracting.
 
-Released under the GNU v.3 license.
+Released under the MIT license.
