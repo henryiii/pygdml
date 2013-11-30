@@ -1,9 +1,17 @@
 # PyGDML
 
-This is a library for writing GDML files in python, as well as converting them from Blender. It consists of two things; a python module (pygdml) and a blender add-on. The blender addon should be available as a zipped download; you can also make it from source by combining the contents of the `pygdml` directory and the `blender_scripts` directory; make sure you use the `__init__.py` file from the `blender_scripts` directory, not the one used in pygdml.
+This is a library for writing GDML files in Python 3, as well as converting them from Blender. It consists of two things; a Python module (pygdml) and a Blender add-on. The Blender addon should be available as a zipped download; you can also make it from source by combining the contents of the pygdml directory and the blender_scripts directory; make sure you use the `__init__.py` file from the blender_scripts directory, not the one used in pygdml.
+
+## Python Module
 
 To install pygdml, run `pip install .` in the pygdml directory. Add a `-e` if you want changes in this directory (like `git pull`) to affect the installed version.
 
+You don't need to install the Python module to use the Blender add-on (it is included).
+
+## Blender Add-on
+
 To install the Blender add-on, open Blender and go to `File -> User Preferences...` and go to the add-ons tab. The install button is near the bottom. You can directly install the .zip or .tar.gz file without extracting.
+
+If you have the lxml module installed (probably easier if you use the system Python in Blender instead of the built-in Python in Blender), then the gdml output is slightly nicer.
 
 Released under the MIT license.
