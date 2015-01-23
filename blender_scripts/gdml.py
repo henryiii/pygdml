@@ -186,10 +186,8 @@ class Solids(GDMLbase):
         return self.addGeneric('tube',**locals())
 
     def addTessallated(self, name, listoffaces, type='ABSOLUTE'):
-        try:
+        if isinstance(name,etree._Element):
             name = name.get('name')
-        except AttributeError:
-            pass
         el = etree.SubElement(self._core, 'tessellated')
         el.set('name', name)
         for face in listoffaces:
@@ -346,9 +344,9 @@ def check_if_contains(tree, name):
         return True
 
 def validify_name(name):
-    try:
+    if isinstance(name, etree._Element):
         return name.get('name')
-    except AttributeError:
+    else:
         return name
 
 

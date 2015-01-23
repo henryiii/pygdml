@@ -87,10 +87,10 @@ class EXPORT_OT_geant_gdml(bpy.types.Operator, ExportHelper):
         description="Use global coordinates for points",
         default=True)
 
-    #standalone = bpy.props.BoolProperty(
-    #    name = "Standalone file",
-    #    description="Should the file include everything needed?",
-    #    default = True)
+    stand_alone = bpy.props.BoolProperty(
+        name = "Standalone file",
+        description="Should the file include everything needed?",
+        default = False)
 
     world = bpy.props.FloatVectorProperty(
             name = 'World size',
@@ -102,7 +102,7 @@ class EXPORT_OT_geant_gdml(bpy.types.Operator, ExportHelper):
         export_gdml(self.properties.filepath,
                     self.properties.only_selected,
                     self.properties.global_coords,
-                    self.properties.standalone,
+                    self.properties.stand_alone,
                     self.properties.world)
         return {'FINISHED'}
 
