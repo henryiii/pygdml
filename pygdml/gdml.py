@@ -2,18 +2,13 @@
 
 import math
 from functools import partial
+import xml.etree.ElementTree as etree
+import xml.dom.minidom
 
 __all__ = ['Define','Materials','Solids','Structure','Setup','GDML']
 
 MY_NAMESPACES = {'xsi':'http://www.w3.org/2001/XMLSchema-instance'}
 SCHEMA_LOC = 'http://service-spi.web.cern.ch/service-spi/app/releases/GDML/GDML_3_0_0/schema/gdml.xsd'
-
-try:
-    from lxml import etree
-    xfeatures = True
-except ImportError:
-    import xml.etree.ElementTree as etree
-    xfeatures = False
 
 class GDMLbase(object):
     def getElements(self):
@@ -21,12 +16,21 @@ class GDMLbase(object):
 
     def __repr__(self):
         return self.__class__.__name__ + '()'
+        
+    def to_string(self, pretty=True):
+        s = etree.tostring(self._core,encoding='unicode')
+        return xml.dom.minidom.parseString(s).toprettyxml(indent="  ") if pretty else s
+        
+    def to_file(self, filename, pretty=False):
+        if pretty:
+            s = self.to_string(pretty)
+            with open(filename,'w',encoding='utf-8') as f:
+                f.write(s)
+        else:
+            etree.ElementTree(self._core).write(filename, xml_declaration=True, encoding='utf-8')
 
     def __str__(self):
-        if xfeatures:
-            return etree.tostring(self._core,encoding='utf-8',pretty_print=True).decode("utf-8")
-        else:
-            return etree.tostring(self._core,encoding='utf-8').decode("utf-8")
+        return self.to_string()
 
     def addGeneric(local_self, local_type, name, **kargs):
         el = etree.SubElement(local_self._core, local_type)
@@ -320,13 +324,11 @@ class GDML(GDMLbase):
                     'Shell', 'Strips', 'Core')
         return all(map(partial(check_if_contains,self._core), required))
 
-    def tofile(self, filename=None):
+    def to_file(self, filename=None, pretty=False):
         if filename is None:
             filename = self._main_name + '.gdml'
-        if xfeatures:
-            etree.ElementTree(self._core).write(filename, xml_declaration=True, encoding='utf-8', pretty_print=True)
-        else:
-            etree.ElementTree(self._core).write(filename, xml_declaration=True, encoding='utf-8')
+        super(GDMLbase,self).to_file(filename, pretty)
+        
 
 
 def find_element_with_name(tree, name):
@@ -358,15 +360,15 @@ def validify_name(name):
         # lmatrix = ob.matrix_local
         # matrix.inverted() *
 
-        vertlocs = [wmatrix * vert.co for vert in me.vertices]
-        mygdml.define.addVerts(name,vertlocs)
-
-        solidfaces = (face.vertices for face in me.tessfaces)
-        mygdml.solids.addTessallated(name,breakup_quads_if_needed(solidfaces,vertlocs))
-
-        mygdml.structure.addVolume(name,me.materials[0].name)
-
-    mygdml.tofile(filepath)
+#        vertlocs = [wmatrix * vert.co for vert in me.vertices]
+#        mygdml.define.addVerts(name,vertlocs)
+#
+#        solidfaces = (face.vertices for face in me.tessfaces)
+#        mygdml.solids.addTessallated(name,breakup_quads_if_needed(solidfaces,vertlocs))
+#
+#        mygdml.structure.addVolume(name,me.materials[0].name)
+#
+#    mygdml.tofile(filepath)
 
 
 def breakup_quads_if_needed(facelist,vertlist):

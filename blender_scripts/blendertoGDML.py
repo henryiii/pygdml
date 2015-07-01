@@ -3,14 +3,15 @@
 
 import bpy
 import bpy_types
-import os
+from pathlib import Path
 
 from .gdml import GDML, breakup_quads_if_needed
 
 def export_gdml(filepath, only_sel, global_coor, standalone=False, world=(5,5,5)):
+    filepath = Path(filepath)
     print('Writing',filepath)
-    fname = os.path.splitext(os.path.basename(filepath))[0]
-    mygdml = GDML(fname)
+
+    mygdml = GDML(filepath.stem)
     mygdml.solids.addBox('world',*world)
     mygdml.structure.addWorld()
 
@@ -28,5 +29,8 @@ def export_gdml(filepath, only_sel, global_coor, standalone=False, world=(5,5,5)
 
             mygdml.structure.addVolume(name,ob.data.materials[0].name)
 
-    mygdml.tofile(filepath)
+    if standalone:
+        mygdml.structure.tofile(filepath)
+    else:
+        mygdml.tofile(filepath)
 

@@ -8,8 +8,8 @@ bl_info = {
     "author": "Henry Schreiner",
     "location": "File > Export",
     "description": "GDML export for Blender. Supports meshes with auto-triangulation. Includes a C++ code generator.",
-    "version":(0,1),
-    "blender":(2,69,0),
+    "version":(0,2),
+    "blender":(2,73,0),
     "warning":"In development",
     "category": "Import-Export"}
 
