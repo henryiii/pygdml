@@ -94,8 +94,8 @@ class EXPORT_OT_geant_gdml(bpy.types.Operator, ExportHelper):
 
     world = FloatVectorProperty(
         name='World size',
-        description="Set the dimensions of the world box.",
-        default=(5, 5, 5))
+        description="Set the dimensions of the world box. Auto calculated if 0.",
+        default=(0, 0, 0))
 
     def execute(self, context):
         from .blendertoGDML import export_gdml
