@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 # Add main directory to path
-masterpath = str(Path().absolute().parent)
+masterpath = str(Path(__file__).absolute().parent.parent)
 if masterpath not in sys.path:
     sys.path.append(masterpath)
 import pygdml.gdml as gdml
@@ -105,36 +105,42 @@ ONLY_STRUCTURE_OUTPUT = r'''<?xml version="1.0" ?>
 '''
 
 class TestGDMLOutput(unittest.TestCase):
-    
+
     def test_world_only(self):
         mygdml = gdml.GDML('simple')
         mygdml.solids.addBox('world',1,2,3)
         mygdml.structure.addWorld()
         self.assertEqual(str(mygdml),WORLD_ONLY_OUTPUT)
-            
+
     def test_simple_objects(self):
         mygdml = gdml.GDML('simple')
         mygdml.solids.addBox('world',4,5,6)
         mygdml.structure.addWorld()
-        
+
         mygdml.solids.addBox('bigbox',1,2,3)
         mygdml.structure.addVolume('bigbox', 'awefulmaterial')
 
         smallbox = mygdml.solids.addBox('smallbox',1,2,3)
         mygdml.structure.addVolume(smallbox, 'nicematerial')
         self.assertEqual(str(mygdml), SIMPLE_OBJECTS_OUTPUT)
-        
+
     def test_only_objects(self):
         mygdml = gdml.GDML('simple')
         mygdml.solids.addBox('world',4,5,6)
         mygdml.structure.addWorld()
-        
+
         mygdml.solids.addBox('bigbox',1,2,3)
         mygdml.structure.addVolume('bigbox', 'awefulmaterial')
 
         smallbox = mygdml.solids.addBox('smallbox',1,2,3)
         mygdml.structure.addVolume(smallbox, 'nicematerial')
         self.assertEqual(str(mygdml.structure),ONLY_STRUCTURE_OUTPUT)
+
+    def test_save(self):
+        mygdml = gdml.GDML('simple')
+        mygdml.solids.addBox('world',4,5,6)
+        mygdml.structure.addWorld()
+        mygdml.to_file('tmp.gdml')
 
 if __name__ == '__main__':
     unittest.main()

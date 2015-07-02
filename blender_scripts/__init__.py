@@ -9,7 +9,7 @@ bl_info = {
     "location": "File > Export",
     "description": "GDML export for Blender. Supports meshes with auto-triangulation. Includes a C++ code generator.",
     "version":(0,2),
-    "blender":(2,73,0),
+    "blender":(2,75,0),
     "warning":"In development",
     "category": "Import-Export"}
 

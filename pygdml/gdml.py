@@ -16,11 +16,11 @@ class GDMLbase(object):
 
     def __repr__(self):
         return self.__class__.__name__ + '()'
-        
+
     def to_string(self, pretty=True):
         s = etree.tostring(self._core,encoding='unicode')
         return xml.dom.minidom.parseString(s).toprettyxml(indent="  ") if pretty else s
-        
+
     def to_file(self, filename, pretty=False):
         if pretty:
             s = self.to_string(pretty)
@@ -327,8 +327,8 @@ class GDML(GDMLbase):
     def to_file(self, filename=None, pretty=False):
         if filename is None:
             filename = self._main_name + '.gdml'
-        super(GDMLbase,self).to_file(filename, pretty)
-        
+        super(GDML,self).to_file(filename, pretty)
+
 
 
 def find_element_with_name(tree, name):

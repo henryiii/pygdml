@@ -30,7 +30,7 @@ def export_gdml(filepath, only_sel, global_coor, standalone=False, world=(5,5,5)
             mygdml.structure.addVolume(name,ob.data.materials[0].name)
 
     if standalone:
-        mygdml.structure.tofile(filepath)
+        mygdml.structure.to_file(filepath)
     else:
-        mygdml.tofile(filepath)
+        mygdml.to_file(filepath)
 
