@@ -52,4 +52,4 @@ def get_extent(ob):
 
 def get_extents(objects):
     extents = np.array([get_extent(ob) for ob in objects], dtype=np.double)
-    return abs(extents).max(axis=2).max(axis=1)*2
+    return abs(extents).max(axis=0).max(axis=0)*2
