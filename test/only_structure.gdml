@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+<structure>
+  <volume name="smallbox">
+    <materialref ref="nicematerial"/>
+    <solidref ref="smallbox"/>
+  </volume>
+  <volume name="bigbox">
+    <materialref ref="awefulmaterial"/>
+    <solidref ref="bigbox"/>
+  </volume>
+  <volume name="World">
+    <materialref ref="G4_AIR"/>
+    <solidref ref="world"/>
+    <physvol>
+      <volumeref ref="bigbox"/>
+      <positionref ref="center"/>
+      <rotationref ref="identity"/>
+    </physvol>
+    <physvol>
+      <volumeref ref="smallbox"/>
+      <positionref ref="center"/>
+      <rotationref ref="identity"/>
+    </physvol>
+  </volume>
+</structure>

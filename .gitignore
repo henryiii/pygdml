@@ -38,3 +38,7 @@ nosetests.xml
 .spyderworkspace
 
 gdmls/*
+*.swp
+.ropeproject/*
+*.zip
+
