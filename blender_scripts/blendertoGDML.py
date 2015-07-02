@@ -7,30 +7,26 @@ from pathlib import Path
 
 from .gdml import GDML, breakup_quads_if_needed
 
-def export_gdml(filepath, only_sel, global_coor, standalone=False, world=(5,5,5)):
+
+def export_gdml(filepath, only_sel, global_coor, world=(5, 5, 5), pretty=True):
     filepath = Path(filepath)
-    print('Writing',filepath)
+    print('Writing', filepath)
 
     mygdml = GDML(filepath.stem)
-    mygdml.solids.addBox('world',*world)
+    mygdml.solids.addBox('world', *world)
     mygdml.structure.addWorld()
 
     for ob in (bpy.context.selected_objects if only_sel else bpy.data.objects):
-        if isinstance(ob.data,bpy_types.Mesh):
-
-            name = ob.name.replace('.','_')
+        if isinstance(ob.data, bpy_types.Mesh):
+            name = ob.name.replace('.', '_')
             ob.data.calc_tessface()
 
             vertlocs = [ob.matrix_world * vert.co if global_coor else vert.co for vert in ob.data.vertices]
-            mygdml.define.addVerts(name,vertlocs)
+            mygdml.define.addVerts(name, vertlocs)
 
             solidfaces = [face.vertices for face in ob.data.tessfaces]
-            mygdml.solids.addTessallated(name,breakup_quads_if_needed(solidfaces,vertlocs))
+            mygdml.solids.addTessallated(name, breakup_quads_if_needed(solidfaces, vertlocs))
 
-            mygdml.structure.addVolume(name,ob.data.materials[0].name)
+            mygdml.structure.addVolume(name, ob.data.materials[0].name)
 
-    if standalone:
-        mygdml.structure.to_file(filepath)
-    else:
-        mygdml.to_file(filepath)
-
+    mygdml.to_file(filepath, pretty)

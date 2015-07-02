@@ -124,7 +124,6 @@ class Define(GDMLbase):
 
 
 class Materials(GDMLbase):
-
     'Note that G4_... NIST materials work!'
 
     def __init__(self):
